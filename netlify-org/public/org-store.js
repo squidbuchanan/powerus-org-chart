@@ -21,7 +21,8 @@
   var KEYS = [
     'powerus_chart_tree_v1', // List / Chart structure
     'powerus_skills_v4',     // Skills view
-    'powerus_board_v2'       // Advisory Board + Board of Directors
+    'powerus_board_v2',      // Advisory Board + Board of Directors
+    'powerus_directory_v1'   // Directory contacts
   ];
 
   // ── 1. Prime localStorage from the shared document (synchronous on purpose) ──
