@@ -20,7 +20,7 @@
   // The exact keys each editable view persists to.
   var KEYS = [
     'powerus_chart_tree_v1', // List / Chart structure
-    'powerus_skills_v4',     // Skills view
+    'powerus_skills_v5',     // Skills view
     'powerus_board_v2',      // Advisory Board + Board of Directors
     'powerus_directory_v1'   // Directory contacts
   ];

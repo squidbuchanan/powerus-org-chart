@@ -17,7 +17,7 @@
  */
 
 (() => {
-  const LS_KEY = 'powerus_skills_v4';
+  const LS_KEY = 'powerus_skills_v5';
 
   const SKILL_SLUG = window.ORG_SKILL_SLUG || (s => (s||'').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,''));
 
@@ -74,13 +74,25 @@
       return { name: p.name, role: '—', type: 'onboard', dept: '' };
     }
 
-    return {
+    const result = {
       groups: (window.ORG_SKILLS || []).map(g => ({
         id: SKILL_SLUG(g.group),
         label: g.group,
         people: g.people.map(resolve),
       })),
     };
+
+    // Populate open/urgent seats from the org tree into their best-guess
+    // skill group. Users can drag them elsewhere afterward.
+    const byId = {};
+    result.groups.forEach(g => { byId[g.id] = g; });
+    collectOpenFromTree().forEach(o => {
+      const slug = skillForOpen(o);
+      let g = byId[slug];
+      if (!g) { g = { id: slug, label: slug, people: [] }; result.groups.push(g); byId[slug] = g; }
+      g.people.push({ name: 'Open', role: o.role, type: o.type, dept: o.dept });
+    });
+    return result;
   }
 
   // ── Load / save persisted state ─────────────────────────────────
@@ -99,6 +111,46 @@
 
   let state = loadState() || buildDefaultState();
 
+  // Map an open/urgent tree node to the skill group it belongs in.
+  function skillForOpen(node) {
+    const dept = node.dept || '';
+    const role = (node.role || '').toLowerCase();
+    switch (dept) {
+      case 'office':    return 'office-of-the-ceo';
+      case 'sales':     return 'revenue';
+      case 'strategy':  return 'talent-and-real-estate';
+      case 'marketing': return 'marketing';
+      case 'finance':   return 'finance';
+      case 'mfg':       return 'manufacturing';
+      case 'legal':     return 'legal';
+      case 'agh':       return 'agh';
+      case 'growth':
+        return /data|analyst|analytics/.test(role) ? 'software-tech' : 'hardware-engineering';
+      case 'tech':
+        if (/software|data|analysis|analytics|\bai\b|\bml\b|information security|optical|cyber/.test(role)) return 'software-tech';
+        if (/r&d|research/.test(role)) return 'r-d';
+        return 'hardware-engineering';
+      case 'ops':
+        if (/pilot|flight/.test(role)) return 'flight';
+        if (/logistic|transport|delivery|fulfillment|supply chain|procurement|program/.test(role)) return 'logistics';
+        return 'operations';
+      default:          return 'operations';
+    }
+  }
+
+  // Collect every open/urgent seat from the org tree, in document order.
+  function collectOpenFromTree() {
+    const out = [];
+    (function walk(n) {
+      if (!n) return;
+      if (n.type === 'open' || n.type === 'urgent') {
+        out.push({ name: 'Open', role: n.role || '', type: n.type, dept: n.dept || '' });
+      }
+      (n.children || []).forEach(walk);
+    })(window.ORG_TREE);
+    return out;
+  }
+
   // ── Toolbar (RESET) ─────────────────────────────────────────────
   // Inject a small bar above the grid; only visible on the skills tab
   // (the body.mode-skills class scopes it).
@@ -106,11 +158,28 @@
   bar.className = 'skills-bar';
   bar.innerHTML = `
     <div class="skills-bar-actions">
+      <button class="ctrl-btn" id="skills-hide-open" type="button" title="Show or hide unfilled (open / urgent) roles.">HIDE OPEN ROLES</button>
       <button class="ctrl-btn" id="skills-add-group" type="button">+ ADD GROUP</button>
       <button class="ctrl-btn" id="skills-reset" type="button" title="Discard your edits and restore the skill groups and people that were shipped with this org chart.">RESTORE DEFAULTS</button>
     </div>
   `;
   wrap.parentNode.insertBefore(bar, wrap);
+
+  // Open-roles visibility — a per-browser view preference (not shared/synced).
+  let hideOpen = false;
+  try { hideOpen = localStorage.getItem('powerus.skills.hideOpen') === '1'; } catch (_) {}
+  const hideOpenBtn = bar.querySelector('#skills-hide-open');
+  function syncHideOpenBtn() {
+    hideOpenBtn.classList.toggle('is-active', hideOpen);
+    hideOpenBtn.textContent = hideOpen ? 'SHOW OPEN ROLES' : 'HIDE OPEN ROLES';
+  }
+  hideOpenBtn.addEventListener('click', () => {
+    hideOpen = !hideOpen;
+    try { localStorage.setItem('powerus.skills.hideOpen', hideOpen ? '1' : '0'); } catch (_) {}
+    syncHideOpenBtn();
+    applySearch(document.getElementById('search') ? document.getElementById('search').value : '');
+  });
+  syncHideOpenBtn();
 
   bar.querySelector('#skills-reset').addEventListener('click', async () => {
     const ok = await openConfirm({
@@ -592,13 +661,19 @@
   }
 
   // ── Search ──────────────────────────────────────────────────────
+  function isOpenCard(c) { const t = c.dataset.type; return t === 'open' || t === 'urgent'; }
+
   function applySearch(q) {
     q = (q || '').trim().toLowerCase();
     wrap.querySelectorAll('.skill-card').forEach(c => {
+      // Open-role visibility first
+      const openHidden = hideOpen && isOpenCard(c);
+      c.classList.toggle('open-hidden', openHidden);
       c.classList.remove('is-match', 'is-dim');
       c.querySelectorAll('mark').forEach(m => m.replaceWith(document.createTextNode(m.textContent)));
       c.querySelector('.sc-name').normalize();
       c.querySelector('.sc-role').normalize();
+      if (openHidden) return;
       if (!q) return;
       const matches = (c.dataset.name || '').includes(q) || (c.dataset.role || '').includes(q) || (c.dataset.dept || '').includes(q);
       if (matches) {
@@ -610,8 +685,9 @@
       }
     });
     wrap.querySelectorAll('.skill-group').forEach(g => {
-      const anyHit = g.querySelector('.skill-card.is-match');
-      g.style.display = (q && !anyHit) ? 'none' : '';
+      const visible = g.querySelectorAll('.skill-card:not(.open-hidden)').length > 0;
+      const anyHit = q ? g.querySelector('.skill-card.is-match:not(.open-hidden)') : true;
+      g.style.display = (!visible || (q && !anyHit)) ? 'none' : '';
     });
   }
   function highlight(el, q) {
