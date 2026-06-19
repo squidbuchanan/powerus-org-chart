@@ -1,0 +1,1015 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Powerus — Organization</title>
+<link rel="stylesheet" href="colors_and_type.css">
+<script src="org-data.js"></script>
+<style>
+  /* ─── Page shell ─────────────────────────────────────────────── */
+  html, body { background: var(--bone); color: var(--fg-1); }
+  body { margin: 0; }
+
+  .org-shell { min-height: 100vh; padding: 32px clamp(16px, 4vw, 64px) 96px; }
+  .org-shell::before {
+    content: ""; position: fixed; inset: 0;
+    background-image:
+      linear-gradient(var(--grid) 1px, transparent 1px),
+      linear-gradient(90deg, var(--grid) 1px, transparent 1px);
+    background-size: var(--module) var(--module);
+    pointer-events: none; z-index: 0;
+  }
+  .org-shell > * { position: relative; z-index: 1; }
+
+  /* ─── Header ─────────────────────────────────────────────────── */
+  header.org-head {
+    display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between;
+    gap: 24px;
+    padding-bottom: 28px; margin-bottom: 32px;
+    border-bottom: 1px solid var(--hairline);
+  }
+  .org-head .titles { display: flex; flex-direction: column; gap: 8px; }
+  .org-head .eyebrow { margin: 0; }
+  .org-head h1 {
+    font-size: clamp(36px, 5vw, 64px); line-height: 0.95; letter-spacing: -0.04em;
+    font-weight: 500; margin: 0;
+  }
+  .org-head .meta { display: flex; gap: 18px; flex-wrap: wrap; align-items: center; }
+  .org-head .meta .mono { color: var(--fg-3); }
+  .org-head .save-status { display: inline-flex; align-items: center; gap: 7px; }
+  .org-head .save-status:empty { display: none; }
+  .org-head .save-status::before { content: ""; width: 7px; height: 7px; border-radius: 999px; background: var(--stone); flex: none; }
+  .org-head .save-status[data-state="saving"] { color: var(--graphite); }
+  .org-head .save-status[data-state="saving"]::before { background: #C9A427; }
+  .org-head .save-status[data-state="saved"]::before { background: #2C8A4A; }
+  .org-head .save-status[data-state="error"] { color: var(--graphite); }
+  .org-head .save-status[data-state="error"]::before { background: var(--ember); }
+
+  /* ─── Toolbar (search + controls) ────────────────────────────── */
+  .toolbar {
+    position: sticky; top: 12px; z-index: 20;
+    display: flex; flex-wrap: wrap; gap: 12px; align-items: center;
+    padding: 10px 14px;
+    background: color-mix(in oklab, var(--bone) 88%, transparent);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: 1px solid var(--hairline);
+    border-radius: 0;
+    margin-bottom: 28px;
+  }
+  .search {
+    flex: 1 1 280px; min-width: 200px;
+    display: flex; align-items: center; gap: 10px;
+    padding: 10px 14px;
+    background: var(--bone);
+    border: 1px solid var(--hairline);
+  }
+  .search input {
+    flex: 1; border: 0; outline: 0; background: transparent;
+    font-family: var(--sans); font-size: 15px; color: var(--fg-1);
+    letter-spacing: -0.005em;
+  }
+  .search .glyph { font-family: var(--mono); font-size: 11px; letter-spacing: 0.18em; color: var(--fg-3); }
+  .search .clear { cursor: pointer; color: var(--fg-3); font-family: var(--mono); font-size: 11px; letter-spacing: 0.18em; padding: 4px 8px; }
+  .search .clear:hover { color: var(--fg-1); }
+  .search .count { font-family: var(--mono); font-size: 11px; letter-spacing: 0.18em; color: var(--fg-3); white-space: nowrap; }
+
+  .ctrl-btn {
+    border: 1px solid var(--hairline);
+    background: var(--bone); color: var(--fg-1);
+    padding: 10px 14px;
+    font-family: var(--mono); font-size: 11px; letter-spacing: 0.18em; text-transform: uppercase;
+    cursor: pointer; user-select: none;
+    transition: background 120ms ease, border-color 120ms ease;
+  }
+  .ctrl-btn:hover { background: var(--bone-2); border-color: var(--char); }
+  .ctrl-btn.is-active { background: var(--char); color: var(--bone); border-color: var(--char); }
+
+  /* ─── Legend ─────────────────────────────────────────────────── */
+  .legend {
+    display: flex; flex-wrap: wrap; gap: 16px 20px;
+    padding: 16px 18px;
+    border: 1px solid var(--hairline);
+    margin-bottom: 36px;
+    align-items: center;
+  }
+  .legend .label { color: var(--fg-3); margin-right: 4px; }
+  .legend-item { display: inline-flex; align-items: center; gap: 8px; font-family: var(--mono); font-size: 11px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--fg-2); }
+  .legend-swatch { width: 14px; height: 14px; border: 1px solid var(--char); flex: none; }
+  .legend-swatch.exec      { background: #F6A24A; }
+  .legend-swatch.onboard   { background: #B6DEC0; }
+  .legend-swatch.urgent    { background: #E86A5C; }
+  .legend-swatch.agent     { background: #BFBFBF; }
+  .legend-swatch.candidate { background: #F2C84A; }
+  .legend-swatch.open      { background: var(--bone); }
+  .legend-swatch.contract  { background: var(--bone); border-style: dashed; }
+  .legend-swatch.advisor   { background: #DDE0F2; }
+
+  /* Skills legend — vertical bars to mirror the left-edge swatch on cards */
+  .legend.legend-skills { gap: 12px 16px; }
+  .legend-skills .label { align-self: center; }
+  .legend-bar {
+    display: inline-flex; align-items: center; gap: 8px;
+    font-family: var(--mono); font-size: 10.5px; letter-spacing: 0.14em;
+    text-transform: uppercase; color: var(--fg-2);
+  }
+  .legend-bar::before {
+    content: ""; display: inline-block;
+    width: 4px; height: 14px; background: var(--stone); flex: none;
+  }
+  .legend-bar[data-skill="office-of-the-ceo"]::before    { background: #FF6200; }
+  .legend-bar[data-skill="revenue"]::before              { background: #C8344C; }
+  .legend-bar[data-skill="talent"]::before               { background: #C9A427; }
+  .legend-bar[data-skill="government-relations"]::before { background: #5C4FA8; }
+  .legend-bar[data-skill="legal"]::before                { background: #7D3FA6; }
+  .legend-bar[data-skill="finance"]::before              { background: #4A5A6A; }
+  .legend-bar[data-skill="operations"]::before           { background: #2C8A4A; }
+  .legend-bar[data-skill="logistics"]::before            { background: #8E7A2A; }
+  .legend-bar[data-skill="flight"]::before               { background: #1E8FB8; }
+  .legend-bar[data-skill="marketing"]::before            { background: #C1428A; }
+  .legend-bar[data-skill="communications"]::before       { background: #B7501E; }
+  .legend-bar[data-skill="investor-relations"]::before   { background: #5E9D2C; }
+  .legend-bar[data-skill="hardware-engineering"]::before { background: #2B2925; }
+  .legend-bar[data-skill="software-tech"]::before        { background: #2864C3; }
+  .legend-bar[data-skill="manufacturing"]::before        { background: #7A5C4A; }
+  .legend-bar[data-skill="rd"]::before                   { background: #1E9E92; }
+
+  /* ─── Tree ───────────────────────────────────────────────────── */
+  .tree { font-family: var(--sans); }
+
+  /* List of children */
+  .branch { list-style: none; margin: 0; padding: 0; }
+  /* Each list item is one node */
+  .node { position: relative; }
+  .node > .row { display: flex; align-items: stretch; gap: 0; }
+
+  /* Connector elbow + spine drawn with pseudo-elements on .row */
+  .branch.children {
+    margin-left: 22px;
+    padding-left: 22px;
+    border-left: 1px solid var(--hairline);
+  }
+  /* The horizontal elbow into a card */
+  .node > .row::before {
+    content: "";
+    align-self: center;
+    flex: none;
+    width: 16px; height: 1px;
+    background: var(--hairline);
+    margin-right: 10px;
+  }
+  /* Top-level row gets no elbow */
+  .tree > .branch > .node > .row::before { display: none; }
+
+  /* Last child trims the spine — handled via CSS by drawing a half-cover */
+  .branch.children > .node:last-child::after {
+    content: "";
+    position: absolute;
+    left: -23px; /* sits on the parent border-left */
+    top: calc(50% + 1px); /* below the elbow */
+    bottom: 0;
+    width: 1px;
+    background: var(--bone);
+  }
+
+  /* ─── Node card ──────────────────────────────────────────────── */
+  .card {
+    flex: 1;
+    display: grid;
+    grid-template-columns: 18px 1fr auto;
+    align-items: center;
+    gap: 10px;
+    min-width: 0;
+    padding: 10px 14px;
+    background: var(--bone);
+    border: 1px solid var(--hairline);
+    cursor: default;
+    transition: border-color 100ms ease, background 100ms ease, transform 100ms ease;
+  }
+  .card:hover { border-color: var(--char); }
+  .card .swatch { width: 10px; height: 28px; background: var(--stone); flex: none; }
+  .card .body { min-width: 0; }
+  .card .name {
+    font-family: var(--sans); font-weight: 700; font-size: 14px; letter-spacing: -0.01em;
+    line-height: 1.2;
+    color: var(--fg-1);
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  }
+  .card .name.is-open { color: var(--fg-3); font-style: italic; font-weight: 500; }
+  .card .role {
+    font-family: var(--mono); font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase;
+    color: var(--fg-2);
+    margin-top: 4px;
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  }
+  .card .right { display: flex; align-items: center; gap: 8px; flex: none; }
+
+  .badge {
+    font-family: var(--mono); font-size: 9px; letter-spacing: 0.18em; text-transform: uppercase;
+    padding: 3px 6px;
+    border: 1px solid var(--char);
+    color: var(--char);
+    line-height: 1;
+  }
+  .badge.exec      { background: #F6A24A; }
+  .badge.onboard   { background: #B6DEC0; }
+  .badge.urgent    { background: #E86A5C; color: var(--bone); }
+  .badge.agent     { background: #BFBFBF; }
+  .badge.candidate { background: #F2C84A; }
+  .badge.open      { background: var(--bone); }
+  .badge.contract  { background: var(--bone); border-style: dashed; }
+  .badge.advisor   { background: #DDE0F2; }
+
+  .toggle {
+    flex: none;
+    width: 26px; height: 26px;
+    display: inline-flex; align-items: center; justify-content: center;
+    border: 1px solid var(--hairline);
+    background: var(--bone);
+    cursor: pointer;
+    font-family: var(--mono); font-size: 12px; color: var(--fg-1);
+    transition: background 100ms ease;
+  }
+  .toggle:hover { background: var(--char); color: var(--bone); }
+  .toggle .ic { transition: transform 180ms ease; line-height: 1; }
+  .node.is-open > .row .toggle .ic { transform: rotate(90deg); }
+  .toggle.is-empty { visibility: hidden; }
+
+  .count-pill {
+    font-family: var(--mono); font-size: 10px; letter-spacing: 0.16em;
+    color: var(--fg-3);
+    padding: 2px 6px;
+    border: 1px solid var(--hairline);
+    white-space: nowrap;
+  }
+
+  /* Skill-tinted left-edge */
+  .card[data-skill="office-of-the-ceo"]    .swatch { background: #FF6200; }
+  .card[data-skill="revenue"]              .swatch { background: #C8344C; }
+  .card[data-skill="talent"]               .swatch { background: #C9A427; }
+  .card[data-skill="government-relations"] .swatch { background: #5C4FA8; }
+  .card[data-skill="legal"]                .swatch { background: #7D3FA6; }
+  .card[data-skill="finance"]              .swatch { background: #4A5A6A; }
+  .card[data-skill="operations"]           .swatch { background: #2C8A4A; }
+  .card[data-skill="logistics"]            .swatch { background: #8E7A2A; }
+  .card[data-skill="flight"]               .swatch { background: #1E8FB8; }
+  .card[data-skill="marketing"]            .swatch { background: #C1428A; }
+  .card[data-skill="communications"]       .swatch { background: #B7501E; }
+  .card[data-skill="investor-relations"]   .swatch { background: #5E9D2C; }
+  .card[data-skill="hardware-engineering"] .swatch { background: #2B2925; }
+  .card[data-skill="software-tech"]        .swatch { background: #2864C3; }
+  .card[data-skill="manufacturing"]        .swatch { background: #7A5C4A; }
+  .card[data-skill="rd"]                   .swatch { background: #1E9E92; }
+
+  /* Children visibility */
+  .node:not(.is-open) > .branch.children { display: none; }
+
+  /* Search highlighting */
+  .card.is-match { border-color: var(--ember); box-shadow: inset 0 0 0 1px var(--ember); }
+  .card.is-dim   { opacity: 0.32; }
+  .card[data-dotted="1"] { border-style: dashed; }
+  .card[data-dotted="1"] .swatch { opacity: 0.55; }
+  mark { background: color-mix(in oklab, var(--ember) 30%, transparent); color: inherit; padding: 0 2px; }
+
+  /* ─── Advisory board ────────────────────────────────────────── */
+  .adv-section {
+    display: grid;
+    grid-template-columns: minmax(180px, 220px) 1fr;
+    gap: 24px;
+    padding: 24px;
+    border: 1px solid var(--hairline);
+    background: transparent;
+    margin-bottom: 36px;
+  }
+  .adv-section h3 { margin: 0; }
+  .adv-section .desc { font-size: 13px; color: var(--fg-2); margin-top: 12px; max-width: 38ch; }
+  .adv-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 10px; }
+  .adv-card {
+    padding: 12px 14px;
+    background: transparent;
+    border: 1px solid var(--hairline);
+  }
+  .adv-card .nm { font-weight: 700; font-size: 13px; }
+  .adv-card .rl { font-family: var(--mono); font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--fg-2); margin-top: 4px; }
+  .adv-card .ds { font-size: 12px; color: var(--fg-2); margin-top: 6px; line-height: 1.3; }
+  .adv-card.is-prospective { border-style: dashed; background: color-mix(in oklab, var(--bone) 92%, transparent); }
+  .adv-card.is-prospective .nm { color: var(--fg-3); font-style: italic; font-weight: 500; }
+  .prospective-tag {
+    display: inline-block;
+    margin-left: 4px;
+    padding: 2px 5px;
+    border: 1px solid var(--char);
+    background: #F2C84A;
+    color: var(--char);
+    font-family: var(--mono);
+    font-size: 9px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    line-height: 1;
+  }
+
+  /* ─── Advisory / Board: editor affordances ─────────────────── */
+  .board-section-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 16px; }
+  .adv-card.is-editable { position: relative; padding-right: 30px; transition: border-color 100ms ease; }
+  .adv-card.is-editable:hover { border-color: var(--char); }
+  .adv-card .bc-grab {
+    position: absolute; top: 10px; right: 10px;
+    font-family: var(--mono); font-size: 12px; letter-spacing: -1px;
+    color: var(--fg-3); cursor: grab; opacity: 0;
+    transition: opacity 100ms ease; line-height: 1;
+  }
+  .adv-card.is-editable:hover .bc-grab { opacity: 0.7; }
+  .adv-card.is-dragging { opacity: 0.4; cursor: grabbing; }
+  .bc-actions {
+    display: flex; gap: 6px; margin-top: 10px;
+    opacity: 0; pointer-events: none;
+    transition: opacity 100ms ease;
+  }
+  .adv-card.is-editable:hover .bc-actions,
+  .adv-card.is-editable:focus-within .bc-actions { opacity: 1; pointer-events: auto; }
+  .adv-card.drop-before { box-shadow: -3px 0 0 0 var(--ember); }
+  .adv-card.drop-after  { box-shadow:  3px 0 0 0 var(--ember); }
+  .adv-grid.is-drop-target { outline: 1px dashed var(--ember); outline-offset: 4px; }
+
+  .sm-check {
+    display: flex; align-items: center; gap: 8px;
+    font-size: 13px; color: var(--fg-1); cursor: pointer;
+  }
+  .sm-check input { width: 15px; height: 15px; accent-color: var(--ember); cursor: pointer; }
+
+  @media print {
+    .board-section-actions, .bc-grab, .bc-actions { display: none !important; }
+    .adv-card.is-editable { padding-right: 14px; }
+  }
+
+  /* ─── Mobile ────────────────────────────────────────────────── */
+  @media (max-width: 720px) {
+    .org-shell { padding: 20px 16px 96px; }
+    .toolbar { top: 0; padding: 8px 10px; }
+    .legend { padding: 12px; gap: 10px 14px; }
+    .legend-item { font-size: 10px; letter-spacing: 0.12em; }
+    .branch.children { margin-left: 12px; padding-left: 12px; }
+    .node > .row::before { width: 10px; margin-right: 6px; }
+    .card { padding: 9px 10px; gap: 8px; }
+    .card .name { font-size: 13px; white-space: normal; }
+    .card .role { font-size: 9px; white-space: normal; }
+    .badge { font-size: 8px; padding: 2px 5px; letter-spacing: 0.14em; }
+    .count-pill { font-size: 9px; padding: 2px 4px; }
+    .adv-section { grid-template-columns: 1fr; padding: 16px; gap: 14px; }
+    .org-head h1 { font-size: 32px; }
+  }
+
+  .chart-card[data-dotted="1"] { border-style: dashed; }
+  .view-toggle { display: inline-flex; border: 1px solid var(--hairline); }
+  .view-toggle .ctrl-btn { border: 0; border-right: 1px solid var(--hairline); }
+  .view-toggle .ctrl-btn:last-child { border-right: 0; }
+
+  body.mode-chart .list-only,
+  body.mode-chart #tree,
+  body.mode-skills .list-only,
+  body.mode-skills #tree,
+  body.mode-directory .list-only,
+  body.mode-directory #tree { display: none; }
+  body.mode-list   #chart-wrap,
+  body.mode-skills #chart-wrap,
+  body.mode-directory #chart-wrap { display: none; }
+  body.mode-list   #skills-wrap,
+  body.mode-chart  #skills-wrap,
+  body.mode-directory #skills-wrap { display: none; }
+  /* Directory view: only visible in its own mode; hide tree/adv/legend/main-search there */
+  body:not(.mode-directory) #directory-wrap { display: none; }
+  body.mode-directory .adv-section,
+  body.mode-directory .legend { display: none; }
+
+  /* Advisory / board moved below core content — separate with a top rule + breathing room */
+  .adv-section.adv-below:first-of-type { margin-top: 56px; padding-top: 40px; border-top: 1px solid var(--hairline); }
+
+  /* ─── Directory view ─────────────────────────────────────────── */
+  .directory-wrap { display: flex; flex-direction: column; gap: 0; }
+  .dir-toolbar { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; margin-bottom: 28px; }
+  .dfilters { display: flex; flex-wrap: wrap; gap: 8px; }
+  .dfilters .ctrl-btn { display: inline-flex; align-items: center; gap: 8px; }
+  .dfilters .ddot { width: 9px; height: 9px; flex: none; background: var(--c, var(--stone)); }
+  .dfilters .ctrl-btn.is-active .ddot { box-shadow: 0 0 0 1px var(--bone); }
+
+  .dgroup { margin-bottom: 40px; }
+  .dgroup-head { display: flex; align-items: center; gap: 14px; margin: 0 0 16px; }
+  .dgroup-head .dbar { width: 4px; height: 22px; background: var(--c, var(--stone)); flex: none; }
+  .dgroup-head h3 { font-family: var(--sans); font-weight: 600; font-size: 13px; letter-spacing: 0.18em; text-transform: uppercase; margin: 0; color: var(--fg-1); }
+  .dgroup-head .dn { font-family: var(--mono); font-size: 11px; letter-spacing: 0.18em; color: var(--fg-3); }
+  .dgroup-head .drule { flex: 1; height: 1px; background: var(--hairline); }
+
+  .dgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(310px, 1fr)); gap: 0; border-top: 1px solid var(--hairline); border-left: 1px solid var(--hairline); }
+  .dcard { position: relative; display: flex; flex-direction: column; gap: 12px; padding: 18px 20px 18px 24px; border-right: 1px solid var(--hairline); border-bottom: 1px solid var(--hairline); background: var(--bone); transition: background 120ms ease; }
+  .dcard:hover { background: var(--bone-2); }
+  .dcard::before { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 4px; background: var(--c, var(--stone)); }
+  .dwho { display: flex; flex-direction: column; gap: 4px; }
+  .dname { font-family: var(--sans); font-weight: 700; font-size: 19px; letter-spacing: -0.015em; line-height: 1.15; color: var(--fg-1); }
+  .dtitle { font-family: var(--sans); font-size: 14px; line-height: 1.35; color: var(--fg-2); }
+  .dtags { display: flex; flex-wrap: wrap; gap: 6px; }
+  .dtag { font-family: var(--mono); font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--fg-2); border: 1px solid var(--hairline); padding: 4px 8px; line-height: 1; }
+  .dtag.div { color: var(--bone); background: var(--c, var(--stone)); border-color: transparent; }
+  .dtag.loc { color: var(--fg-3); }
+  .dcontact { display: flex; flex-direction: column; gap: 6px; margin-top: auto; padding-top: 12px; border-top: 1px solid var(--hairline-soft); }
+  .dcontact a, .dcontact span.empty { font-family: var(--mono); font-size: 12px; letter-spacing: 0.02em; color: var(--fg-2); text-decoration: none; display: inline-flex; align-items: center; gap: 8px; word-break: break-all; }
+  .dcontact a:hover { color: var(--ember); }
+  .dcontact .ck { color: var(--fg-3); font-size: 10px; letter-spacing: 0.16em; text-transform: uppercase; flex: none; width: 18px; }
+  .dcontact span.empty { color: var(--fg-3); opacity: 0.6; }
+  .dempty { padding: 60px 20px; text-align: center; font-family: var(--mono); font-size: 12px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--fg-3); border: 1px dashed var(--hairline); }
+  .directory-wrap .hidden { display: none !important; }
+  @media (max-width: 560px) { .dgrid { grid-template-columns: 1fr; } }
+
+  /* ─── Skills view ─────────────────────────────────────────── */
+  .skills-wrap { display: flex; flex-direction: column; gap: 32px; }
+  .skill-group { display: flex; flex-direction: column; gap: 14px; }
+  .skill-group-head {
+    display: flex; align-items: baseline; gap: 16px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid var(--hairline);
+  }
+  .skill-group-title {
+    margin: 0;
+    font-size: 22px; letter-spacing: -0.02em; font-weight: 500;
+    color: var(--fg-1);
+    text-transform: none;
+  }
+  .skill-group-count {
+    font-family: var(--mono); font-size: 10px; letter-spacing: 0.18em;
+    color: var(--fg-3);
+    text-transform: uppercase;
+  }
+  .skill-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 10px;
+  }
+  .skill-card {
+    box-sizing: border-box;
+    padding: 12px 14px;
+    background: var(--bone);
+    border: 1px solid var(--hairline);
+    border-left: 5px solid var(--stone);
+    transition: border-color 100ms ease, transform 100ms ease;
+  }
+  .skill-card:hover { border-color: var(--char); }
+  .skill-card .sc-name {
+    font-family: var(--sans); font-weight: 700; font-size: 14px;
+    letter-spacing: -0.01em;
+    color: var(--fg-1);
+    line-height: 1.2;
+  }
+  .skill-card .sc-role {
+    font-family: var(--mono); font-size: 10px; letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--fg-2);
+    margin-top: 5px;
+    line-height: 1.3;
+  }
+  .skill-card[data-type="exec"]     { background: #FFF6EC; }
+  .skill-card[data-type="urgent"]   { background: #FBEBE8; }
+  .skill-card[data-type="onboard"]  { background: #EFF8F1; }
+  .skill-card[data-type="advisor"]  { background: #F0F1F9; }
+  .skill-card[data-type="candidate"]{ background: #FFF8DC; }
+  .skill-card[data-type="open"]     { background: repeating-linear-gradient(45deg, transparent 0 6px, rgba(0,0,0,0.04) 6px 7px); }
+  .skill-card[data-type="contract"] { border-style: dashed; }
+  .skill-card .sc-name.is-open { color: var(--fg-3); font-style: italic; font-weight: 600; }
+
+  .skill-card[data-skill="office-of-the-ceo"]    { border-left-color: #FF6200; }
+  .skill-card[data-skill="revenue"]              { border-left-color: #C8344C; }
+  .skill-card[data-skill="talent"]               { border-left-color: #C9A427; }
+  .skill-card[data-skill="government-relations"] { border-left-color: #5C4FA8; }
+  .skill-card[data-skill="legal"]                { border-left-color: #7D3FA6; }
+  .skill-card[data-skill="finance"]              { border-left-color: #4A5A6A; }
+  .skill-card[data-skill="operations"]           { border-left-color: #2C8A4A; }
+  .skill-card[data-skill="logistics"]            { border-left-color: #8E7A2A; }
+  .skill-card[data-skill="flight"]               { border-left-color: #1E8FB8; }
+  .skill-card[data-skill="marketing"]            { border-left-color: #C1428A; }
+  .skill-card[data-skill="communications"]       { border-left-color: #B7501E; }
+  .skill-card[data-skill="investor-relations"]   { border-left-color: #5E9D2C; }
+  .skill-card[data-skill="hardware-engineering"] { border-left-color: #2B2925; }
+  .skill-card[data-skill="software-tech"]        { border-left-color: #2864C3; }
+  .skill-card[data-skill="manufacturing"]        { border-left-color: #7A5C4A; }
+  .skill-card[data-skill="rd"]                   { border-left-color: #1E9E92; }
+
+  .skill-card.is-match { border-color: var(--ember); box-shadow: inset 0 0 0 1px var(--ember); }
+  .skill-card.is-dim   { opacity: 0.32; }
+
+  /* ─── Skills view: editor affordances ─────────────────────── */
+  .skills-bar {
+    display: none;
+    align-items: center; justify-content: flex-end;
+    gap: 8px;
+    margin-bottom: 18px;
+  }
+  body.mode-skills .skills-bar { display: flex; }
+  .skills-bar-actions { display: flex; gap: 8px; }
+
+  /* Group head: actions visible always */
+  .skill-group-head { position: relative; }
+  .skill-group-title { cursor: text; }
+  .skill-group-title:hover { color: var(--ember); }
+  .skill-group-actions {
+    margin-left: auto;
+    display: flex; gap: 6px;
+    opacity: 0;
+    transition: opacity 120ms ease;
+  }
+  .skill-group:hover .skill-group-actions,
+  .skill-group:focus-within .skill-group-actions { opacity: 1; }
+  .sg-btn {
+    appearance: none; -webkit-appearance: none;
+    background: transparent;
+    color: var(--fg-2);
+    border: 1px solid var(--hairline);
+    padding: 4px 8px;
+    font: inherit;
+    font-family: var(--mono);
+    font-size: 9.5px; letter-spacing: 0.16em;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: background 100ms ease, color 100ms ease, border-color 100ms ease;
+  }
+  .sg-btn:hover { background: var(--char); color: var(--bone); border-color: var(--char); }
+  .sg-btn-danger:hover { background: #B33A2A; border-color: #B33A2A; }
+
+  /* Card: drag handle + hover actions */
+  .skill-card { position: relative; }
+  .skill-card .sc-grab {
+    position: absolute; top: 8px; right: 10px;
+    font-family: var(--mono); font-size: 12px; letter-spacing: -1px;
+    color: var(--fg-3);
+    cursor: grab;
+    user-select: none;
+    opacity: 0;
+    transition: opacity 100ms ease;
+    line-height: 1;
+  }
+  .skill-card:hover .sc-grab { opacity: 0.7; }
+  .skill-card.is-dragging { opacity: 0.4; cursor: grabbing; }
+  .skill-card.is-dragging .sc-grab { cursor: grabbing; }
+
+  .sc-actions {
+    position: absolute; bottom: 6px; right: 8px;
+    display: flex; gap: 4px;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 100ms ease;
+  }
+  .skill-card:hover .sc-actions { opacity: 1; pointer-events: auto; }
+  .sc-btn {
+    appearance: none; -webkit-appearance: none;
+    background: var(--bone);
+    color: var(--fg-2);
+    border: 1px solid var(--hairline);
+    padding: 3px 6px;
+    font: inherit;
+    font-family: var(--mono);
+    font-size: 9px; letter-spacing: 0.16em;
+    text-transform: uppercase;
+    cursor: pointer;
+    line-height: 1.2;
+  }
+  .sc-btn:hover { background: var(--char); color: var(--bone); border-color: var(--char); }
+  .sc-btn-danger:hover { background: #B33A2A; border-color: #B33A2A; }
+
+  /* Drop indicators */
+  .skill-card.drop-before { box-shadow: -3px 0 0 0 var(--ember); }
+  .skill-card.drop-after  { box-shadow:  3px 0 0 0 var(--ember); }
+  .skill-grid.is-drop-target {
+    background: rgba(255, 98, 0, 0.05);
+    outline: 1px dashed var(--ember);
+    outline-offset: -4px;
+  }
+  .skill-grid {
+    min-height: 60px;
+    padding: 4px;
+    margin: -4px;
+  }
+
+  /* Hide editor affordances on non-skills views (cards still appear in print, but cleanly) */
+  body:not(.mode-skills) .skill-group-actions,
+  body:not(.mode-skills) .sc-grab,
+  body:not(.mode-skills) .sc-actions { display: none !important; }
+
+  /* ─── Modal ──────────────────────────────────────────────── */
+  .skills-modal {
+    position: fixed; inset: 0; z-index: 1000;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .skills-modal[hidden] { display: none; }
+  .skills-modal-backdrop {
+    position: absolute; inset: 0;
+    background: rgba(22, 22, 22, 0.55);
+    backdrop-filter: blur(2px);
+  }
+  .skills-modal-panel {
+    position: relative;
+    background: var(--bone);
+    border: 1px solid var(--char);
+    width: min(440px, calc(100vw - 32px));
+    padding: 22px 24px 18px;
+    display: flex; flex-direction: column; gap: 14px;
+    box-shadow: 0 24px 48px rgba(0,0,0,0.25);
+  }
+  .skills-modal-head {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 2px;
+  }
+  .skills-modal-title {
+    margin: 0; font-size: 24px; letter-spacing: -0.02em; font-weight: 500;
+    line-height: 1.2;
+    text-transform: none;
+    color: var(--fg-1);
+  }
+  .skills-modal-x {
+    appearance: none; background: transparent; border: 0;
+    font-size: 22px; line-height: 1; color: var(--fg-2); cursor: pointer;
+    padding: 4px 8px;
+  }
+  .skills-modal-x:hover { color: var(--char); }
+  .sm-field { display: flex; flex-direction: column; gap: 4px; }
+  .sm-label {
+    font-family: var(--sans); font-size: 12px; letter-spacing: 0;
+    font-weight: 600;
+    color: var(--fg-2);
+  }
+  .sm-input {
+    font: inherit;
+    font-size: 14px;
+    padding: 8px 10px;
+    background: var(--bone-2);
+    border: 1px solid var(--hairline);
+    color: var(--fg-1);
+  }
+  .sm-input:focus { outline: none; border-color: var(--char); background: var(--bone); }
+  .sm-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .sm-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 6px; }
+  .sm-error {
+    font-family: var(--mono); font-size: 10px; letter-spacing: 0.1em;
+    color: #B33A2A; text-transform: uppercase;
+    margin-top: -6px;
+  }
+  .sm-body {
+    margin: 0;
+    font-size: 14px;
+    line-height: 1.5;
+    color: var(--fg-2);
+  }
+  .ctrl-btn.is-primary.is-danger {
+    background: #B33A2A; border-color: #B33A2A;
+  }
+  .ctrl-btn.is-primary.is-danger:hover {
+    background: #962E20; border-color: #962E20;
+  }
+  .skills-modal-panel-sm { width: min(360px, calc(100vw - 32px)); }
+  .ctrl-btn.is-primary {
+    background: var(--char); color: var(--bone); border-color: var(--char);
+  }
+  .ctrl-btn.is-primary:hover { background: var(--ember); border-color: var(--ember); }
+
+  .chart-wrap { position: relative; }
+  .chart-controls {
+    position: absolute; top: 12px; right: 12px; z-index: 5;
+    display: flex; gap: 0;
+    border: 1px solid var(--hairline);
+    background: color-mix(in oklab, var(--bone) 92%, transparent);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+  }
+  .chart-controls .ctrl-btn { border: 0; border-right: 1px solid var(--hairline); padding: 8px 12px; }
+  .chart-controls .ctrl-btn:last-child { border-right: 0; }
+
+  .chart {
+    position: relative;
+    width: 100%;
+    height: 78vh;
+    min-height: 520px;
+    border: 1px solid var(--hairline);
+    background:
+      linear-gradient(var(--grid) 1px, transparent 1px) 0 0 / 24px 24px,
+      linear-gradient(90deg, var(--grid) 1px, transparent 1px) 0 0 / 24px 24px,
+      var(--bone);
+    overflow: hidden;
+    touch-action: none;
+    cursor: grab;
+    user-select: none;
+    -webkit-user-select: none;
+  }
+  .chart.is-dragging { cursor: grabbing; }
+  .chart-stage {
+    position: absolute; top: 0; left: 0;
+    transform-origin: 0 0;
+    will-change: transform;
+  }
+  .chart-svg {
+    position: absolute; top: 0; left: 0;
+    pointer-events: none;
+    overflow: visible;
+  }
+  .chart-card {
+    position: absolute;
+    box-sizing: border-box;
+    background: var(--bone);
+    border: 1px solid var(--hairline);
+    border-left: 5px solid var(--stone);
+    display: flex; flex-direction: column; justify-content: center;
+    padding: 8px 10px;
+    font-family: var(--sans);
+    line-height: 1.2;
+  }
+  .chart-card .cc-name {
+    font-weight: 700; font-size: 12px;
+    letter-spacing: -0.005em;
+    color: var(--fg-1);
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  }
+  .chart-card .cc-role {
+    font-family: var(--mono); font-size: 9px; letter-spacing: 0.12em; text-transform: uppercase;
+    color: var(--fg-2);
+    margin-top: 3px;
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  }
+  .chart-card[data-type="open"] .cc-name,
+  .chart-card[data-type="urgent"] .cc-name {
+    font-style: italic; font-weight: 500; color: var(--fg-3);
+  }
+  .chart-card[data-type="exec"] { background: #FFF6EC; }
+  .chart-card[data-type="urgent"] { background: #FBEBE8; }
+  .chart-card[data-type="onboard"] { background: #EFF8F1; }
+  .chart-card[data-type="contract"] { border-style: dashed; }
+
+  .chart-card[data-skill="office-of-the-ceo"]    { border-left-color: #FF6200; }
+  .chart-card[data-skill="revenue"]              { border-left-color: #C8344C; }
+  .chart-card[data-skill="talent"]               { border-left-color: #C9A427; }
+  .chart-card[data-skill="government-relations"] { border-left-color: #5C4FA8; }
+  .chart-card[data-skill="legal"]                { border-left-color: #7D3FA6; }
+  .chart-card[data-skill="finance"]              { border-left-color: #4A5A6A; }
+  .chart-card[data-skill="operations"]           { border-left-color: #2C8A4A; }
+  .chart-card[data-skill="logistics"]            { border-left-color: #8E7A2A; }
+  .chart-card[data-skill="flight"]               { border-left-color: #1E8FB8; }
+  .chart-card[data-skill="marketing"]            { border-left-color: #C1428A; }
+  .chart-card[data-skill="communications"]       { border-left-color: #B7501E; }
+  .chart-card[data-skill="investor-relations"]   { border-left-color: #5E9D2C; }
+  .chart-card[data-skill="hardware-engineering"] { border-left-color: #2B2925; }
+  .chart-card[data-skill="software-tech"]        { border-left-color: #2864C3; }
+  .chart-card[data-skill="manufacturing"]        { border-left-color: #7A5C4A; }
+  .chart-card[data-skill="rd"]                   { border-left-color: #1E9E92; }
+
+  .chart-hint {
+    margin: 8px 0 0; color: var(--fg-3);
+  }
+
+  /* ─── Chart edit mode ─────────────────────────────────── */
+  body.chart-edit-mode .chart { cursor: default; }
+  body.chart-edit-mode .chart-card { cursor: pointer; transition: border-color 80ms ease, box-shadow 80ms ease; }
+  body.chart-edit-mode .chart-card:hover { border-color: var(--ember); }
+  body.chart-edit-mode .chart-controls { right: 256px; }
+  .chart-card.is-selected { border-color: var(--ember) !important; box-shadow: 0 0 0 2px color-mix(in oklab, var(--ember) 35%, transparent) !important; z-index: 2; }
+
+  /* Chart edit inspector — feature unfinished; hidden for now */
+  #chart-inspector { display: none !important; }
+  #chart-edit-btn { display: none !important; }
+  body.chart-edit-mode .chart-controls { right: 12px; }
+
+  /* Inspector panel */
+  .chart-inspector {
+    position: absolute; top: 0; right: 0; bottom: 0;
+    width: 244px;
+    background: var(--bone);
+    border-left: 1px solid var(--char);
+    display: flex; flex-direction: column;
+    z-index: 10;
+    transform: translateX(100%);
+    transition: transform 200ms cubic-bezier(.22,.8,.36,1);
+    overflow-y: auto;
+    overflow-x: hidden;
+    box-shadow: -8px 0 24px rgba(0,0,0,0.10);
+  }
+  .chart-inspector.is-open { transform: translateX(0); }
+
+  .ci-head {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 13px 14px 11px;
+    border-bottom: 1px solid var(--hairline);
+    position: sticky; top: 0; z-index: 1;
+    background: var(--bone);
+    flex-shrink: 0;
+  }
+  .ci-title { font-family: var(--mono); font-size: 10px; letter-spacing: 0.22em; text-transform: uppercase; color: var(--fg-3); }
+  .ci-close-btn { appearance: none; background: transparent; border: 0; font-size: 20px; line-height: 1; color: var(--fg-2); cursor: pointer; padding: 2px 6px; }
+  .ci-close-btn:hover { color: var(--char); }
+
+  .ci-body { padding: 14px 14px 18px; display: flex; flex-direction: column; gap: 11px; flex: 1; }
+  .ci-sub-count { margin: 0; font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--fg-3); }
+
+  .ci-field { display: flex; flex-direction: column; gap: 4px; }
+  .ci-label { font-family: var(--sans); font-size: 11px; font-weight: 600; color: var(--fg-2); }
+  .ci-input {
+    font: inherit; font-size: 13px;
+    padding: 7px 9px;
+    background: var(--bone-2);
+    border: 1px solid var(--hairline);
+    color: var(--fg-1);
+    width: 100%; box-sizing: border-box;
+  }
+  .ci-input:focus { outline: none; border-color: var(--char); background: var(--bone); }
+  .ci-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .ci-check-row { display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--fg-2); cursor: pointer; }
+  .ci-check-row input { accent-color: var(--ember); }
+
+  .ci-actions { display: flex; gap: 6px; flex-wrap: wrap; }
+  .ci-actions #ci-delete:hover { background: #B33A2A; border-color: #B33A2A; color: var(--bone); }
+
+  .ci-order-row { display: flex; gap: 6px; }
+  .ci-order-btn { flex: 1; font-size: 9px; padding: 7px 6px; }
+
+  .ci-divider { height: 1px; background: var(--hairline); margin: 2px 0; flex-shrink: 0; }
+  .ci-restore-btn { width: 100%; font-size: 9.5px; color: var(--fg-3); }
+  .ci-restore-btn:hover { color: #B33A2A; border-color: #B33A2A; }
+
+  @media (max-width: 720px) {
+    .chart { height: 70vh; min-height: 420px; }
+    .chart-controls .ctrl-btn { padding: 6px 10px; font-size: 10px; }
+  }
+
+  /* Print */
+  @media print {
+    .toolbar, .org-head .meta { display: none; }
+    .node:not(.is-open) > .branch.children { display: block; } /* expand all on print */
+    .card { break-inside: avoid; }
+  }
+</style>
+</head>
+<body class="mode-list">
+<!-- Blank splash for standalone bundle (no image flash) -->
+<template id="__bundler_thumbnail">
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+    <rect width="100" height="100" fill="#FDFAF3"/>
+  </svg>
+</template>
+<div class="org-shell">
+
+  <header class="org-head">
+    <div class="titles">
+      <p class="eyebrow">[ ORG · 2026 ]</p>
+      <h1>Organization</h1>
+    </div>
+    <div class="meta">
+      <span class="mono" id="head-count">— PEOPLE</span>
+      <span class="mono" id="head-open">— OPEN</span>
+      <span class="mono" id="head-tiers">— TIERS</span>
+      <span class="mono save-status" id="org-save-status" data-state="saved"></span>
+    </div>
+  </header>
+
+  <!-- Toolbar -->
+  <div class="toolbar" role="toolbar" aria-label="Org chart controls">
+    <div class="view-toggle" role="tablist" aria-label="View mode">
+      <button class="ctrl-btn is-active" id="view-list" role="tab" aria-selected="true">LIST</button>
+      <button class="ctrl-btn" id="view-chart" role="tab" aria-selected="false">CHART</button>
+      <button class="ctrl-btn" id="view-skills" role="tab" aria-selected="false">SKILLS</button>
+      <button class="ctrl-btn" id="view-directory" role="tab" aria-selected="false">DIRECTORY</button>
+    </div>
+    <label class="search">
+      <span class="glyph">FIND</span>
+      <input id="search" type="search" placeholder="Search by name, role, or department…" autocomplete="off" spellcheck="false">
+      <span class="count" id="search-count"></span>
+      <span class="clear" id="search-clear" hidden>CLEAR</span>
+    </label>
+    <button class="ctrl-btn list-only" id="btn-expand">EXPAND ALL</button>
+    <button class="ctrl-btn list-only" id="btn-collapse">COLLAPSE</button>
+    <button class="ctrl-btn list-only" id="btn-hide-open">HIDE OPEN</button>
+  </div>
+
+  <!-- Legend — status (tint / dashed) -->
+  <div class="legend" aria-label="Status legend">
+    <span class="label">STATUS</span>
+    <span class="legend-item"><span class="legend-swatch exec"></span>Exec</span>
+    <span class="legend-item"><span class="legend-swatch onboard"></span>On board</span>
+    <span class="legend-item"><span class="legend-swatch urgent"></span>Urgent Hire</span>
+    <span class="legend-item"><span class="legend-swatch candidate"></span>Candidate</span>
+    <span class="legend-item"><span class="legend-swatch agent"></span>Agent</span>
+    <span class="legend-item"><span class="legend-swatch open"></span>Open</span>
+    <span class="legend-item"><span class="legend-swatch contract"></span>Contractor</span>
+    <span class="legend-item"><span class="legend-swatch advisor"></span>Advisor</span>
+  </div>
+
+  <!-- Tree (list view) -->
+  <ul class="tree branch" id="tree" role="tree"></ul>
+
+  <!-- Skills (capability view) -->
+  <div class="skills-wrap" id="skills-wrap"></div>
+
+  <!-- Directory (contact directory view) -->
+  <div class="directory-wrap" id="directory-wrap" hidden></div>
+
+  <!-- Chart (pan/zoom view) -->
+  <div class="chart-wrap" id="chart-wrap" hidden>
+    <div class="chart-controls">
+      <div class="view-toggle" role="tablist" aria-label="Population filter" style="margin-right: 8px;">
+        <button class="ctrl-btn is-active" id="filter-all" role="tab" aria-selected="true">ALL</button>
+        <button class="ctrl-btn" id="filter-onboard" role="tab" aria-selected="false">ON BOARD</button>
+      </div>
+      <button class="ctrl-btn" id="zoom-out" aria-label="Zoom out">&minus;</button>
+      <button class="ctrl-btn" id="zoom-fit">FIT</button>
+      <button class="ctrl-btn" id="zoom-in" aria-label="Zoom in">+</button>
+      <button class="ctrl-btn" id="chart-edit-btn" style="border-left:1px solid var(--hairline);margin-left:4px;">EDIT</button>
+    </div>
+    <div class="chart" id="chart"></div>
+    <p class="chart-hint mono">DRAG TO PAN &middot; SCROLL OR PINCH TO ZOOM</p>
+
+    <!-- Chart edit inspector -->
+    <div id="chart-inspector" class="chart-inspector" hidden>
+      <div class="ci-head">
+        <span class="ci-title">Edit Node</span>
+        <button class="ci-close-btn" id="ci-close" aria-label="Close inspector">&times;</button>
+      </div>
+      <div class="ci-body">
+        <p class="ci-sub-count mono" id="ci-sub-count"></p>
+        <div class="ci-field">
+          <label class="ci-label" for="ci-name">Name</label>
+          <input class="ci-input" id="ci-name" type="text" autocomplete="off" spellcheck="false" placeholder="Open">
+        </div>
+        <div class="ci-field">
+          <label class="ci-label" for="ci-role">Role / Title</label>
+          <input class="ci-input" id="ci-role" type="text" autocomplete="off" spellcheck="false">
+        </div>
+        <div class="ci-row">
+          <div class="ci-field">
+            <label class="ci-label" for="ci-type">Status</label>
+            <select class="ci-input" id="ci-type">
+              <option value="exec">Exec</option>
+              <option value="onboard">On Board</option>
+              <option value="urgent">Urgent Hire</option>
+              <option value="candidate">Candidate</option>
+              <option value="agent">Agent</option>
+              <option value="open">Open</option>
+              <option value="contract">Contractor</option>
+              <option value="advisor">Advisor</option>
+            </select>
+          </div>
+          <div class="ci-field">
+            <label class="ci-label" for="ci-dept">Dept</label>
+            <select class="ci-input" id="ci-dept">
+              <option value="office">Exec Office</option>
+              <option value="growth">Growth</option>
+              <option value="sales">Sales</option>
+              <option value="strategy">Strategy</option>
+              <option value="marketing">Marketing</option>
+              <option value="ops">Operations</option>
+              <option value="tech">Technology</option>
+              <option value="mfg">Manufacturing</option>
+              <option value="finance">Finance</option>
+              <option value="legal">Legal</option>
+              <option value="agh">AGH</option>
+            </select>
+          </div>
+        </div>
+        <label class="ci-check-row">
+          <input type="checkbox" id="ci-dotted"> Dotted line
+        </label>
+        <div class="ci-actions">
+          <button class="ctrl-btn is-primary" id="ci-save">SAVE</button>
+          <button class="ctrl-btn" id="ci-add-child">+ CHILD</button>
+          <button class="ctrl-btn" id="ci-delete">DELETE</button>
+        </div>
+        <div class="ci-order-row">
+          <button class="ctrl-btn ci-order-btn" id="ci-move-up">&uarr; MOVE UP</button>
+          <button class="ctrl-btn ci-order-btn" id="ci-move-down">MOVE DOWN &darr;</button>
+        </div>
+        <div class="ci-divider"></div>
+        <button class="ctrl-btn ci-restore-btn" id="ci-restore">RESTORE DEFAULTS</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Advisory board + Board of Directors: parallel to reporting tree, placed below core content -->
+  <section class="adv-section adv-below" aria-label="Advisory Board">
+    <div>
+      <h3>Advisory Board</h3>
+      <p class="desc">Outside counsel and domain expertise across defense, government, engineering, and international markets. Several advisors mentor a C-suite exec by domain.</p>
+    </div>
+    <div class="adv-grid" id="adv-grid"></div>
+  </section>
+
+  <section class="adv-section adv-below" aria-label="Board of Directors">
+    <div>
+      <h3>Board of Directors</h3>
+      <p class="desc">Corporate governance and oversight. Sets strategic direction and holds fiduciary responsibility to shareholders.</p>
+    </div>
+    <div class="adv-grid" id="board-grid"></div>
+  </section>
+
+</div>
+
+<script src="org-store.js"></script>
+<script src="org-skills.js"></script>
+<script src="org-render.js"></script>
+<script src="org-chart-view.js"></script>
+<script src="org-skills-view.js"></script>
+<script src="org-board-view.js"></script>
+<script src="org-directory-view.js"></script>
+<script src="org-chart-edit.js"></script>
+</body>
+</html>

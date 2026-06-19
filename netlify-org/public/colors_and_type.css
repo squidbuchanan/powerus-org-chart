@@ -1,0 +1,177 @@
+/* ─────────────────────────────────────────────────────────────────
+   Powerus Design System — colors + type tokens
+   Single source of truth for any surface wearing the Powerus name.
+   Import this file FIRST, before any component CSS.
+   ───────────────────────────────────────────────────────────────── */
+
+@import url('https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap');
+
+:root {
+  /* ─── Base color tokens ────────────────────────────────────────── */
+
+  /* Bone — the dominant surface color. Warm cream, never pure white. */
+  --bone:          #FDFAF3;
+  --bone-2:        #F7F2E6;  /* slightly recessed surfaces */
+  --bone-3:        #EFE9D9;  /* well/inset surfaces */
+
+  /* Char — the dominant ink. Near-black with a hint of warmth. */
+  --char:          #161616;
+  --char-2:        #232321;  /* dark-mode surface tint */
+  --graphite:      #3A3A38;  /* secondary ink */
+  --stone:         #9A938A;  /* tertiary ink, captions */
+
+  /* Hairlines — structural separators */
+  --hairline:      rgba(22, 22, 22, 0.14);
+  --hairline-soft: rgba(22, 22, 22, 0.08);
+
+  /* Grid — the 48px module that backgrounds the system */
+  --grid:          rgba(22, 22, 22, 0.020);  /* interior pages */
+  --grid-cover:    rgba(22, 22, 22, 0.07);   /* hero / cover treatment */
+
+  /* Ember — THE accent. Used sparingly. One mark per page is the bar. */
+  --ember:         #FF6200;
+
+  /* Earth secondaries — for vertical-specific imagery + chips */
+  --clay:          #A8806A;
+  --moss:          #6F7158;
+  --dust:          #C2B5A0;
+  --basalt:        #2B2925;
+
+  /* ─── Semantic color tokens ────────────────────────────────────── */
+  --bg:            var(--bone);
+  --bg-recessed:   var(--bone-2);
+  --bg-inset:      var(--bone-3);
+  --bg-inverse:    var(--char);
+
+  --fg-1:          var(--char);       /* primary ink */
+  --fg-2:          var(--graphite);   /* secondary ink */
+  --fg-3:          var(--stone);      /* tertiary / caption */
+  --fg-inverse:    var(--bone);
+
+  --accent:        var(--ember);
+  --accent-fg:     var(--bone);
+
+  --border:        var(--hairline);
+  --border-soft:   var(--hairline-soft);
+
+  /* ─── Type tokens ──────────────────────────────────────────────── */
+  --sans:  'Manrope', system-ui, -apple-system, 'Helvetica Neue', Arial, sans-serif;
+  --mono:  'JetBrains Mono', ui-monospace, 'SFMono-Regular', Menlo, monospace;
+
+  /* ─── Spacing tokens ───────────────────────────────────────────── */
+  --pad:           96px;     /* section side padding (desktop) */
+  --pad-mobile:    32px;
+  --rail:          288px;    /* left navigation rail width */
+  --gap:           24px;     /* default flex/grid gap */
+  --module:        48px;     /* the grid module */
+
+  /* ─── Radii ────────────────────────────────────────────────────── */
+  --radius-0:      0;        /* structural elements — never round */
+  --radius-pill:   999px;    /* chips, pills */
+}
+
+/* ─────────────────────────────────────────────────────────────────
+   Semantic type styles — apply directly to elements via class or
+   tag. Headlines use Manrope at tight tracking; readouts use mono.
+   ───────────────────────────────────────────────────────────────── */
+
+body, .p-body {
+  font-family: var(--sans);
+  font-size: 17px;
+  line-height: 1.55;
+  color: var(--fg-1);
+  font-feature-settings: "ss01", "ss02", "cv11";
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+h1, .h1 {
+  font-family: var(--sans);
+  font-weight: 400;
+  font-size: clamp(56px, 9.5vw, 150px);
+  letter-spacing: -0.05em;
+  line-height: 0.86;
+  color: var(--fg-1);
+  text-wrap: balance;
+}
+
+h2, .h2 {
+  font-family: var(--sans);
+  font-weight: 400;
+  font-size: clamp(40px, 5.4vw, 84px);
+  letter-spacing: -0.045em;
+  line-height: 0.98;
+  color: var(--fg-1);
+}
+
+h3, .h3 {
+  font-family: var(--sans);
+  font-weight: 600;
+  font-size: 13px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--fg-1);
+}
+
+h4, .h4 {
+  font-family: var(--sans);
+  font-weight: 700;
+  font-size: 24px;
+  letter-spacing: -0.015em;
+  line-height: 1.2;
+  color: var(--fg-1);
+}
+
+.lede, p.lede {
+  font-family: var(--sans);
+  font-size: 22px;
+  line-height: 1.4;
+  letter-spacing: -0.015em;
+  color: var(--fg-2);
+  text-wrap: pretty;
+  max-width: 60ch;
+}
+
+p {
+  margin: 0 0 14px;
+  max-width: 68ch;
+  text-wrap: pretty;
+}
+
+/* Mono — technical readouts, page numbers, eyebrows. ALWAYS uppercase. */
+.mono, code {
+  font-family: var(--mono);
+  font-weight: 500;
+  font-size: 11px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--fg-2);
+}
+.mono-sm { font-size: 10px; letter-spacing: 0.22em; }
+.mono-md { font-size: 13px; letter-spacing: 0.14em; }
+
+/* Label — Manrope tracked uppercase; the quieter sibling to mono */
+.label {
+  font-family: var(--sans);
+  font-weight: 600;
+  font-size: 11px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--fg-2);
+}
+.label-sm { font-size: 10px; letter-spacing: 0.2em; }
+
+/* Eyebrow — the bracketed mono label that sits above section titles */
+.eyebrow {
+  font-family: var(--mono);
+  font-weight: 500;
+  font-size: 11px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--fg-2);
+  margin-bottom: 16px;
+}
+.eyebrow .bracket { color: var(--fg-3); }
+
+/* The ember accent — use ONCE per page */
+.em, .accent { color: var(--accent); }

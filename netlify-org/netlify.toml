@@ -1,0 +1,7 @@
+[build]
+  publish = "public"
+  functions = "netlify/functions"
+
+# Single-page app: nothing fancy, just serve the static files + the function.
+[functions]
+  node_bundler = "esbuild"
