@@ -50,7 +50,7 @@ const GROWTH_TEAM = [
 
 // ── Patrick O'Hara — Talent & Strategic Growth ────────────────
 const STRATEGY_TEAM = [
-  N("Jordan Fox", "M&A Analyst", "onboard", "strategy"),
+  N("Jordan Fox", "Strategic Growth Analyst", "onboard", "strategy"),
   O("HR Administrator",  "strategy"),
   O("Talent Coordinator","strategy"),
 ];
@@ -62,7 +62,7 @@ const CHRIS_PRATT = {
   type: "onboard",
   dept: "legal",
   children: [
-    { name: "Hogan Gidley",   role: "Government Relations & Public Policy", type: "advisor",  dept: "office", children: [] },
+    { name: "Hogan Gidley",   role: "Advisor, Government Relations", type: "advisor",  dept: "office", children: [] },
     N("Jessica Lycos",  "Government Relations (R)", "onboard", "office"),
     N("Laura Saunders", "Government Relations (R)", "onboard", "office"),
     N("Allen Rubin",    "Government Relations (D)", "onboard", "office"),
@@ -93,7 +93,7 @@ const CHARLIE_K_TEAM = [
   ]),
 
   N("Kristin Spivey", "Director of Capture & Proposals", "onboard", "sales", [
-    N("Aaron Smith", "Sr Inside Sales Mgr", "onboard", "sales", [
+    N("Aaron Smith", "Senior Inside Sales Manager", "onboard", "sales", [
       N("Brian Baswell", "Sales Tech", "onboard", "sales"),
       O("Inside Sales Reps", "sales"),
     ]),
@@ -102,7 +102,7 @@ const CHARLIE_K_TEAM = [
 
 // ── Marketing ─────────────────────────────────────────────────
 const BUCHANAN = N("Michael \u201CSquid\u201D Buchanan", "Chief Brand Officer", "onboard", "marketing", [
-  N("Ryan Donahue",  "Social Media Manager",       "onboard",  "marketing"),
+  N("Ryan Donahue",  "Content & Media Manager",       "onboard",  "marketing"),
   N("Caleb Wright",  "Media Manager",              "onboard",  "marketing"),
   { name: "Erik Long",           role: "Marketing Coordinator",        type: "contract", dept: "marketing", children: [] },
   { name: "Defiance Analytics",  role: "ETF Marketing & Social Media", type: "contract", dept: "marketing", children: [] },
@@ -116,7 +116,7 @@ const MARKETING_TEAM = [
     O("Booth Team", "marketing"),
     O("Booth Team", "marketing"),
   ]),
-  N("Troy Curtis", "Director of Content", "onboard", "marketing", [
+  N("Troy Curtis", "Social Media/Marketing", "onboard", "marketing", [
     O("Videography", "marketing"),
     O("Editor",      "marketing"),
   ]),
@@ -127,14 +127,14 @@ const OPS_TEAM = [
   O("VP of Shared Services", "ops", [
     O("Assistant, Operations", "ops"),
     N("Scott Wolff", "Training Coordinator", "onboard", "ops", [
-      N("Sam Cousins", "Demo Team Lead", "onboard", "ops"),
+      N("Sam Cousins", "Flight Lead, US", "onboard", "ops"),
       O("Flight Engineer Lead", "ops", [
         O("Flight Engineer", "ops"),
         O("Flight Engineer", "ops"),
         O("Flight Interns",  "ops"),
         { name: "Corey Tapp", role: "Contracted Pilot", type: "contract", dept: "ops", children: [] },
       ]),
-      N("Nathan Reim", "Tactical Pilot Lead", "onboard", "ops", [
+      N("Nathan Reim", "Flight Lead, International", "onboard", "ops", [
         O("Tactical Pilot", "ops"),
         O("Tactical Pilot", "ops"),
         O("Tactical Pilot", "ops"),
@@ -153,8 +153,8 @@ const OPS_TEAM = [
 
   O("VP of Supply Chain", "ops", [
     O("Program Management", "ops"),
-    N("Natalie Ross", "Procurement Manager", "onboard", "ops"),
-    N("Jared Paul", "VP of Logistics", "onboard", "ops", [
+    N("Natalie Ross", "Executive Operations Coordinator", "onboard", "ops"),
+    N("Jared Paul", "Logistics Manager", "onboard", "ops", [
       O("Transportation Team Lead", "ops"),
     ]),
     O("Delivery", "ops", [
@@ -181,10 +181,10 @@ const TECH_MFG_TEAM = [
     N("Brent Anderson", "Manufacturing Manager, Charlotte 1","onboard", "mfg"),
     O("Manufacturing Manager, Charlotte 2",  "mfg"),
   ]),
-  N("Ziv Marom", "VP of R&D", "onboard", "tech", [
-    N("Jeremy Schnipke", "Director of R&D", "onboard", "tech"),
+  N("Ziv Marom", "VP, R&D", "onboard", "tech", [
+    N("Jeremy Schnipke", "Director, R&D", "onboard", "tech"),
   ]),
-  N("Maxim Eschenazy", "VP of Technology", "onboard", "tech", [
+  N("Maxim Eschenazy", "VP, Technology", "onboard", "tech", [
     O("Director of Hardware", "tech", [
       O("Deep Cycle Team Lead", "tech", [
         N("Thejas Aradhya", "Hardware Engineer", "onboard", "tech"),
@@ -193,7 +193,7 @@ const TECH_MFG_TEAM = [
     O("Director of Software",         "tech"),
     N("Mohammed Farooq", "Director of AI & ML",   "onboard", "tech"),
     O("Director of Data & Analysis",  "tech"),
-    N("Shivansh Agrawal", "Propulsion Engineering","onboard", "tech"),
+    N("Shivansh Agrawal", "Director, Engineering","onboard", "tech"),
     N("Noah Lambert",     "Analog Engineering",    "onboard", "tech"),
     N("Boris Illev",      "Hardware Engineer",      "onboard", "tech"),
     N("Maxim Poe",        "Hardware Engineer",      "onboard", "tech"),
@@ -207,7 +207,7 @@ const TECH_MFG_TEAM = [
 
 // ── Finance ───────────────────────────────────────────────────
 const FINANCE_TEAM = [
-  N("Jake Norris", "VP, Corporate Control", "onboard", "finance"),
+  N("Jake Norris", "Corporate Control", "onboard", "finance"),
   N("Silas",       "Finance",               "onboard", "finance"),
   O("VP of Finance", "finance", [
     O("Controller", "finance", [
@@ -223,7 +223,7 @@ const FINANCE_TEAM = [
 // ── Legal ─────────────────────────────────────────────────────
 const LEGAL_TEAM = [
   O("VP of Compliance", "legal"),
-  N("Nicole Nan", "VP, General Counsel", "onboard", "legal", [
+  N("Nicole Nan", "General Counsel", "onboard", "legal", [
     N("Matt Farr", "Assistant General Counsel", "onboard", "legal"),
     O("AI Analyst",  "legal"),
     O("Legal Staff", "legal"),
@@ -232,37 +232,37 @@ const LEGAL_TEAM = [
 ];
 
 // ── Top-level tree ─────────────────────────────────────────────
-window.ORG_TREE = N("Andrew Fox", "CEO & Founder", "exec", "office", [
+window.ORG_TREE = N("Andrew Fox", "Founder & CEO", "exec", "office", [
 
-  N("Patrick O'Hara", "EVP of Strategic Growth", "exec", "strategy", STRATEGY_TEAM),
+  N("Patrick O'Hara", "EVP Strategic Growth", "exec", "strategy", STRATEGY_TEAM),
 
   N("Charlie Keebaugh", "EVP of Sales", "exec", "sales", CHARLIE_K_TEAM),
 
-  N("Roman Vinfeld", "Executive Leadership, Revenue", "exec", "office", [
-    N("Amy Bove",        "Chief of Staff",  "onboard", "office"),
+  N("Roman Vinfeld", "Co-Founder & Chief Revenue Officer", "exec", "office", [
+    N("Amy Bove",        "Operations, EVP",  "onboard", "office"),
     N("Andrew Schmidt",  "Chief of Staff",  "onboard", "office"),
-    N("Lily Monterroso", "Executive Admin", "onboard", "office"),
+    N("Lily Monterroso", "Executive Assistant", "onboard", "office"),
   ]),
 
   { name: "Bob Harward", role: "Chief Growth Officer", type: "exec",    dept: "growth",  forceBranch: true, children: [] },
   { name: "Jason Assad", role: "Investor Relations",   type: "onboard", dept: "finance", forceBranch: true, children: [] },
 
-  N("Brett Velicovich", "President", "exec", "office", [
+  N("Brett Velicovich", "Co-founder & President", "exec", "office", [
     { ...N("Olivia Mcquail", "Executive Assistant", "onboard", "office"), dotted: true },
-    N("Andrew Valkenburg", "EVP of Technology & Manufacturing", "exec", "tech", TECH_MFG_TEAM),
+    N("Andrew Valkenburg", "EVP, Manufacturing & Technology", "exec", "tech", TECH_MFG_TEAM),
     O("EVP of Operations", "ops", OPS_TEAM),
   ]),
 
   // Communications (separate from Marketing)
-  N("Michael Sinensky", "EVP of Marketing", "exec", "office", [
+  N("Michael Sinensky", "Co-founder & EVP, Marketing", "exec", "office", [
     O("VP of Corporate Comms", "office"),
   ]),
 
   // Marketing org under open VP of Marketing
   O("VP of Marketing", "marketing", MARKETING_TEAM),
 
-  N("Ed Jordan", "EVP & Chief of Finance",            "exec", "finance", FINANCE_TEAM),
-  N("Jim Biehl", "EVP & Chief of Legal & Compliance", "exec", "legal",   LEGAL_TEAM),
+  N("Ed Jordan", "Chief Financial Officer",            "exec", "finance", FINANCE_TEAM),
+  N("Jim Biehl", "Chief Legal Officer", "exec", "legal",   LEGAL_TEAM),
 ]);
 
 // Advisor links

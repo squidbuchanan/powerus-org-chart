@@ -69,9 +69,12 @@
 
     function resolve(p) {
       const m = byName.get((p.name||'').toLowerCase());
-      if (m) return { name: m.name, role: m.role || '', type: m.type || 'onboard', dept: m.dept || '' };
-      if (p.fallback) return { name: p.name, role: p.fallback.role || '', type: p.fallback.type || 'onboard', dept: p.fallback.dept || '' };
-      return { name: p.name, role: '—', type: 'onboard', dept: '' };
+      let base;
+      if (m) base = { name: m.name, role: m.role || '', type: m.type || 'onboard', dept: m.dept || '' };
+      else if (p.fallback) base = { name: p.name, role: p.fallback.role || '', type: p.fallback.type || 'onboard', dept: p.fallback.dept || '' };
+      else base = { name: p.name, role: '—', type: 'onboard', dept: '' };
+      if (p.role) base.role = p.role; // explicit title override (Signature Directory titles)
+      return base;
     }
 
     const result = {
@@ -119,7 +122,7 @@
       case 'office':    return 'office-of-the-ceo';
       case 'sales':     return 'revenue';
       case 'strategy':  return 'talent-and-real-estate';
-      case 'marketing': return 'marketing';
+      case 'marketing': return 'comms-marketing';
       case 'finance':   return 'finance';
       case 'mfg':       return 'manufacturing';
       case 'legal':     return 'legal';
